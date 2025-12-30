@@ -19,10 +19,18 @@ jobs:
           extensions: mbstring, intl
           ini-values: error_reporting=-1, display_errors=On
           coverage: none
+      # 新增：安装GMSSL依赖
+      - name: Install GMSSL
+        run: |
+          sudo apt update
+          sudo apt install -y gcc make libssl-dev
+          git clone https://github.com/guanzhi/GmSSL.git
+          cd GmSSL && ./config && make && sudo make install
       - name: phpize
         run: phpize
+        # 修改：指定GMSSL路径
       - name: configure
-        run: ./configure
+        run: ./configure --with-gmssl=/usr/local/gmssl
       - name: make
         run: make
       - name: test
