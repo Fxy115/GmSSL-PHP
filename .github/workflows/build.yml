@@ -1,0 +1,39 @@
+name: Build php_gmssl.dll for PHP 8.0.2 Windows
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout php-gmssl
+        uses: actions/checkout@v4
+
+      - name: Setup PHP SDK
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0.2'
+          extensions: ''
+          tools: phpize, php-config
+
+      - name: Install MSYS2 and GMSSL
+        run: |
+          choco install msys2 -y
+          msys2 -c "pacman -S --noconfirm mingw-w64-x86_64-gcc make"
+          msys2 -c "git clone https://github.com/guanzhi/GmSSL.git"
+          msys2 -c "cd GmSSL && ./config && make && make install"
+
+      - name: Build php_gmssl.dll
+        run: |
+          phpize
+          ./configure --with-gmssl=/usr/local/gmssl
+          nmake
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: php_gmssl-8.0.2.dll
+          path: x64/Release_TS/php_gmssl.dll
